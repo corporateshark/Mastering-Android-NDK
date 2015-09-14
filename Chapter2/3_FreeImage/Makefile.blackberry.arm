@@ -1,0 +1,7 @@
+BB_TARGET=arm
+
+CC = arm-unknown-nto-qnx8.0.0eabi-gcc.exe
+CXX = arm-unknown-nto-qnx8.0.0eabi-gcc.exe
+AR = arm-unknown-nto-qnx8.0.0eabi-ar.exe
+
+include Makefile.blackberry

@@ -1,0 +1,7 @@
+BB_TARGET=x86
+
+CC = i486-pc-nto-qnx8.0.0-gcc.exe
+CXX = i486-pc-nto-qnx8.0.0-gcc.exe
+AR = i486-pc-nto-qnx8.0.0-ar.exe
+
+include Makefile.blackberry

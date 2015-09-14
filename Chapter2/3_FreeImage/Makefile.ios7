@@ -1,0 +1,102 @@
+# Configuration for iPhone OS, making static libs
+# this will generate both iPhone (arm) and iPhoneSimulator (i686) libs
+
+include Makefile.srcs
+
+CFLAGS =  -g -O2 -ffast-math -fno-strict-aliasing
+CXXFLAGS =  -g -O2 -fno-strict-aliasing
+
+GCC_VERSION = 4.2
+IPHONEOS_DEPLOYMENT_TARGET = 7.1
+MACOSX_DEPLOYMENT_TARGET = 10.6
+
+PLATFORM_SIM = iPhoneSimulator
+PLATFORM_PHONE = iPhoneOS
+
+ARCH_SIM = i386
+ARCH_PHONE = armv7
+
+XCODE_BASE=/Applications/Xcode.app/Contents
+PLATFORM_SIM_DEVELOPER_BIN_DIR = $(XCODE_BASE)/Developer/Platforms/$(PLATFORM_SIM).platform/Developer/usr/bin
+PLATFORM_PHONE_DEVELOPER_BIN_DIR = $(XCODE_BASE)/Developer/Platforms/$(PLATFORM_PHONE).platform/Developer/usr/bin
+
+SDKROOT_SIM = $(XCODE_BASE)/Developer/Platforms/$(PLATFORM_SIM).platform/Developer/SDKs/$(PLATFORM_SIM)$(IPHONEOS_DEPLOYMENT_TARGET).sdk
+SDKROOT_PHONE = $(XCODE_BASE)/Developer/Platforms/$(PLATFORM_PHONE).platform/Developer/SDKs/$(PLATFORM_PHONE)$(IPHONEOS_DEPLOYMENT_TARGET).sdk
+
+EXTRA_CFLAGS_SIM += -arch $(ARCH_SIM) -pipe -mdynamic-no-pic -fvisibility=hidden $(INCLUDE) -isysroot $(SDKROOT_SIM)
+EXTRA_LDFLAGS_SIM += -arch $(ARCH_SIM) -isysroot $(SDKROOT_SIM) -Wl,-dead_strip
+EXTRA_CFLAGS_SIM += -D__IPHONE_OS_VERSION_MIN_REQUIRED=20000 -mmacosx-version-min=$(MACOSX_DEPLOYMENT_TARGET)
+EXTRA_LDFLAGS_SIM += -mmacosx-version-min=$(MACOSX_DEPLOYMENT_TARGET)
+
+EXTRA_CFLAGS_PHONE += -arch $(ARCH_PHONE) -pipe -gdwarf-2 -mdynamic-no-pic -fvisibility=hidden $(INCLUDE) -isysroot $(SDKROOT_PHONE)
+EXTRA_LDFLAGS_PHONE += -arch $(ARCH_PHONE) -isysroot $(SDKROOT_PHONE) -Wl,-dead_strip
+EXTRA_CFLAGS_PHONE += -miphoneos-version-min=$(IPHONEOS_DEPLOYMENT_TARGET)
+EXTRA_LDFLAGS_PHONE += -miphoneos-version-min=$(IPHONEOS_DEPLOYMENT_TARGET)
+
+AR_SIM = ar
+# $(PLATFORM_SIM_DEVELOPER_BIN_DIR)/ar
+AR_PHONE = ar
+# $(PLATFORM_PHONE_DEVELOPER_BIN_DIR)/ar
+
+CC_SIM = clang
+#$(PLATFORM_SIM_DEVELOPER_BIN_DIR)/gcc-$(GCC_VERSION)
+CC_PHONE = clang
+#$(PLATFORM_PHONE_DEVELOPER_BIN_DIR)/gcc-$(GCC_VERSION)
+
+CFLAGS_SIM = $(CFLAGS) $(EXTRA_CFLAGS_SIM)
+LDFLAGS_SIM = $(EXTRA_LDFLAGS_SIM)
+CXX_SIM = clang
+#$(PLATFORM_SIM_DEVELOPER_BIN_DIR)/g++-$(GCC_VERSION)
+CXXFLAGS_SIM += $(EXTRA_CFLAGS_SIM) -fvisibility-inlines-hidden
+LIBTOOL_SIM = libtool
+#/Developer/Platforms/$(PLATFORM_SIM).platform/Developer/usr/bin/libtool
+
+CFLAGS_PHONE = $(CFLAGS) $(EXTRA_CFLAGS_PHONE)
+LDFLAGS_PHONE += $(EXTRA_LDFLAGS_PHONE)
+CXX_PHONE = clang
+#$(PLATFORM_PHONE_DEVELOPER_BIN_DIR)/g++-$(GCC_VERSION)
+CXXFLAGS_PHONE += -stdlib=libstdc++ $(EXTRA_CFLAGS_PHONE) -fvisibility-inlines-hidden
+LIBTOOL_PHONE = libtool
+#/Developer/Platforms/$(PLATFORM_PHONE).platform/Developer/usr/bin/libtool
+
+TARGET = freeimage
+STATICLIB_SIM = lib$(TARGET).a-ios71sim
+STATICLIB_PHONE = lib$(TARGET).a-ios71
+HEADER = Source/FreeImage.h
+
+.SUFFIXES: .o-i386 .o-armv7
+MODULES_ARM = $(SRCS:.c=.o-armv7)
+MODULES_ARM := $(MODULES_ARM:.cpp=.o-armv7)
+MODULES_i386 = $(SRCS:.c=.o-i386)
+MODULES_i386 := $(MODULES_i386:.cpp=.o-i386)
+
+default: all
+
+all: dist
+
+dist: FreeImage
+	cp *.a Dist
+	cp Source/FreeImage.h Dist
+
+FreeImage: $(STATICLIB_SIM) $(STATICLIB_PHONE)
+
+$(STATICLIB_SIM): $(MODULES_i386)
+	$(LIBTOOL_SIM) -arch_only i386 -o $@ $(MODULES_i386)
+
+.c.o-i386:
+	$(CC_SIM) $(CFLAGS_SIM) -c $< -o $@
+
+.cpp.o-i386:
+	$(CXX_SIM) $(CXXFLAGS_SIM) -c $< -o $@
+
+$(STATICLIB_PHONE): $(MODULES_ARM)
+	$(LIBTOOL_PHONE) -arch_only armv7 -o $@ $(MODULES_ARM)
+
+.c.o-armv7:
+	$(CC_PHONE) $(CFLAGS_PHONE) -c $< -o $@
+
+.cpp.o-armv7:
+	$(CXX_PHONE) $(CXXFLAGS_PHONE) -c $< -o $@
+
+clean:
+	rm -f core Dist/*.* u2dtmp* $(MODULES_i386) $(MODULES_ARM) $(STATICLIB_SIM) $(STATICLIB_PHONE)
