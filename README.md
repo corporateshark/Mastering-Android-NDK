@@ -11,4 +11,4 @@ https://github.com/corporateshark/Mastering-Android-NDK
 This repository contains the complete source code bundle for the book:
 
 	Mastering Android NDK
-	https://www.packtpub.com/application-development/mastering-android-ndk
+	https://www.packtpub.com/en-us/product/mastering-android-ndk-9781785288333
